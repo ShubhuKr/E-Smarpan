@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Opening YouTube…</title>
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; display:flex; align-items:center; justify-content:center;
+           height:100vh; margin:0; background:#fff; color:#222; padding:20px; text-align:center; }
+    .card { max-width:520px; }
+    a { color:#0b5cff; font-weight:600; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h3 id="title">Opening YouTube…</h3>
+    <p id="msg">If the YouTube app does not open, <a id="fallbackLink" href="#" target="_blank" rel="noopener">open on YouTube</a>.</p>
+  </div>
+
+  <script>
+    (function(){
+      const params = new URLSearchParams(location.search);
+      const vid = params.get('v') || params.get('video') || '';
+      const title = params.get('t') || '';
+      const ref = params.get('ref') || '';
+      // Accept optional web param (URL-encoded)
+      const webParam = params.get('web') || '';
+      const web = webParam ? decodeURIComponent(webParam) :
+                  (vid ? ('https://www.youtube.com/watch?v=' + encodeURIComponent(vid) + (ref ? ('&ref=' + encodeURIComponent(ref)) : '')) :
+                         ('https://www.youtube.com/results?search_query=' + encodeURIComponent(title || '')));
+      const intentUrl = vid ? ('intent://watch?v=' + encodeURIComponent(vid) + '#Intent;package=com.google.android.youtube;scheme=https;end') : null;
+      const schemeUrl = vid ? ('vnd.youtube://watch?v=' + encodeURIComponent(vid)) : null;
+
+      const fallbackLink = document.getElementById('fallbackLink');
+      fallbackLink.href = web;
+      if(title) document.getElementById('title').innerText = 'Opening: ' + title;
+
+      const ua = navigator.userAgent || '';
+      const isAndroid = /Android/i.test(ua);
+      const isIOS = /iPhone|iPad|iPod/i.test(ua);
+
+      if (isAndroid && intentUrl) {
+        window.location = intentUrl;
+        setTimeout(function(){ window.location = web; }, 900);
+        return;
+      }
+
+      if (isIOS && schemeUrl) {
+        const ifrm = document.createElement('iframe');
+        ifrm.style.display = 'none';
+        ifrm.src = schemeUrl;
+        document.body.appendChild(ifrm);
+        setTimeout(function(){
+          try { document.body.removeChild(ifrm); } catch(e){}
+          window.location = web;
+        }, 800);
+        return;
+      }
+
+      window.location = web;
+    })();
+  </script>
+</body>
+</html>
